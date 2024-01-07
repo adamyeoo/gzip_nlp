@@ -1,2 +1,20 @@
-# gzip_nlp
+# gzip_nlp: Sentiment Analysis using Text Compression-based Algorithm
 A text classifier using gzip and kNN-based algorithm from novel research that allegedly performs better than BERT
+
+## Inspiration
+In my job, I was given a task to modify the current sentiment analyzer with a more robust model, which led me to research many different methods, but one caught my eye. In a recent paper "“Low-Resource” Text Classification: A Parameter-Free Classification Method with Compressors" (Jiang et al., 2023) from the University of Waterloo (my uni!), it claims that under certain conditions, a simple KNN model with text compression performs better than BERT (currently the best-performing NLP model that revolutionized generative AI). I thought that this was huge, given the fact that I knew how computationally intensive and data-hungry BERT-based models were. So I decided to investigate this claim by reading through the paper, fully understanding the mathematical intuitions behind it and executing it.
+
+## How the Algorithm Works
+The researchers’ method is based on the intuition that objects from the same class (based on certain characteristics or features) share more regularity than those from different classes. It uses a lossless compressor, such as gzip, to capture this regularity, which is then translated into a compressor-based distance metric called Normalized Compression Distance. With the resulting distance matrix, it uses a k-nearest-neighbor classifier to perform classification. This approach is simple and lightweight as it doesn't need preprocessing or training, and it operates without the computational demands often associated with modern NLP methods, let alone BERT. Compressors are indifferent when it comes to the data type they are compressing, and it's non-parametric, which does not make specific assumptions about the probability distribution from which the data is drawn.
+
+## Execution and Results
+To test it out, I used a dataset that contains exactly 1000 tweets with emojis. A pseudocode for the Gzip implementation is already provided in the paper, but I made some modifications to fit the dataset. To calculate the accuracy, I simply aggregated the sum of all cases where the predicted value matches the test values and divided by the total test size. When I ran it with varying test sizes and random states, the accuracies ranged from 75-83% which for me was mind-blowingly impressive, given that we only had 1000 datapoints. To be quite frank, I would've been impressed if it was above 50%, to see that it actually works.
+
+## Limitation
+However, there is a fatal flaw. If you take a look at the code, you can see that the timed execution of the Gzip implementation is around 30 seconds, which is horrible, given that the dataset only had 1000 rows. As the time complexity of kNN is O(n^2), what's happening is that for each test row x1, we are calculating the distance from x1 to every single train row. To further test it, I tried using a 10,000-row dataset, and it went up to 10 minutes, just to show that time gets exponentially slow.
+
+## Modifications
+To respond to the impractically slow algorithm, I implemented multi-processes to the Gzip implementation, which greatly reduced the time to around 8 seconds. To prevent race conditions (when multiple threads of executions tries to access a shared mutable state), I implemented locks to make sure only one thread is accessed at a time to correctly accumulate the shared counter.
+
+## What I learned
+I was still relatively new to the field of practical machine learning, so there were a lot of prerequisites for me to catch up like how the K Nearest Neighbors algorithm works (implemented from scratch). As it was my first time reading a novel research paper in its entirety, I spent a good amount of time understanding the mathematical intuitions behind the research paper and learning new concepts in information theory such as the Kolmogorov Complexity. Although I haven't developed the gzip implementation myself, I still enjoyed this process of exploring and implementing it with modifications to satisfy my curiosities.
